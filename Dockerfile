@@ -29,7 +29,29 @@ ENV PYTHON_VERSION=2.7.12-r0
 ENV PY_PIP_VERSION=8.1.2-r0
 ENV SUPERVISOR_VERSION=3.3.1
 
-RUN apk --update add unzip curl vim bash git mariadb-client python=$PYTHON_VERSION py-pip=$PY_PIP_VERSION
+RUN apk add --no-cache --virtual .ext-deps \
+	unzip \
+	curl \
+	vim \
+	bash \
+	git \
+	libpng-dev \
+	libjpeg-turbo-dev \
+	freetype-dev \
+	libwebp-dev \
+	mariadb-client \
+	python=$PYTHON_VERSION \
+	py-pip=$PY_PIP_VERSION
+
+
+RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include --with-webp-dir=/usr/include
+
+RUN pecl install xdebug && \
+	pecl clear-cache
+
+RUN docker-php-ext-install mysqli pdo_mysql zip bcmath gd && \
+	docker-php-ext-enable xdebug && \
+	docker-php-source delete
 
 RUN pip install supervisor==$SUPERVISOR_VERSION
 
